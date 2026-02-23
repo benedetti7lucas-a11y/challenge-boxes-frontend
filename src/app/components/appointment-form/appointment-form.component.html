@@ -28,9 +28,9 @@
                 }
               }
             </mat-select>
-            @if (appointmentForm.get('place_id')?.invalid && appointmentForm.get('place_id')?.touched) {
-              @if (appointmentForm.get('place_id')?.errors?.['backendError']) {
-                <mat-error>{{ appointmentForm.get('place_id')?.errors?.['backendError'] }}</mat-error>
+            @if (shouldShowError('place_id')) {
+              @if (hasBackendError('place_id')) {
+                <mat-error>{{ getBackendError('place_id') }}</mat-error>
               } @else {
                 <mat-error>Debe seleccionar un taller</mat-error>
               }
@@ -48,9 +48,9 @@
             />
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
-            @if (appointmentForm.get('appointmentDate')?.invalid && appointmentForm.get('appointmentDate')?.touched) {
-              @if (appointmentForm.get('appointmentDate')?.errors?.['backendError']) {
-                <mat-error>{{ appointmentForm.get('appointmentDate')?.errors?.['backendError'] }}</mat-error>
+            @if (shouldShowError('appointmentDate')) {
+              @if (hasBackendError('appointmentDate')) {
+                <mat-error>{{ getBackendError('appointmentDate') }}</mat-error>
               } @else {
                 <mat-error>Debe seleccionar una fecha</mat-error>
               }
@@ -64,9 +64,9 @@
               type="time"
               formControlName="appointmentTime"
             />
-            @if (appointmentForm.get('appointmentTime')?.invalid && appointmentForm.get('appointmentTime')?.touched) {
-              @if (appointmentForm.get('appointmentTime')?.errors?.['backendError']) {
-                <mat-error>{{ appointmentForm.get('appointmentTime')?.errors?.['backendError'] }}</mat-error>
+            @if (shouldShowError('appointmentTime')) {
+              @if (hasBackendError('appointmentTime')) {
+                <mat-error>{{ getBackendError('appointmentTime') }}</mat-error>
               } @else {
                 <mat-error>Debe seleccionar una hora</mat-error>
               }
@@ -86,9 +86,9 @@
               <mat-option value="Reparación de Motor">Reparación de Motor</mat-option>
               <mat-option value="Otros">Otros</mat-option>
             </mat-select>
-            @if (appointmentForm.get('service_type')?.invalid && appointmentForm.get('service_type')?.touched) {
-              @if (appointmentForm.get('service_type')?.errors?.['backendError']) {
-                <mat-error>{{ appointmentForm.get('service_type')?.errors?.['backendError'] }}</mat-error>
+            @if (shouldShowError('service_type')) {
+              @if (hasBackendError('service_type')) {
+                <mat-error>{{ getBackendError('service_type') }}</mat-error>
               } @else {
                 <mat-error>Debe seleccionar un tipo de servicio</mat-error>
               }
@@ -109,8 +109,12 @@
               formControlName="name"
               placeholder="Ingrese su nombre completo"
             />
-            @if (appointmentForm.get('name')?.invalid && appointmentForm.get('name')?.touched) {
-              <mat-error>El nombre es obligatorio</mat-error>
+            @if (shouldShowError('name')) {
+              @if (hasBackendError('name')) {
+                <mat-error>{{ getBackendError('name') }}</mat-error>
+              } @else {
+                <mat-error>El nombre es obligatorio</mat-error>
+              }
             }
           </mat-form-field>
         </div>
@@ -124,8 +128,10 @@
               formControlName="email"
               placeholder="ejemplo@correo.com"
             />
-            @if (appointmentForm.get('email')?.invalid && appointmentForm.get('email')?.touched) {
-              @if (appointmentForm.get('email')?.errors?.['required']) {
+            @if (shouldShowError('email')) {
+              @if (hasBackendError('email')) {
+                <mat-error>{{ getBackendError('email') }}</mat-error>
+              } @else if (appointmentForm.get('email')?.errors?.['required']) {
                 <mat-error>El email es obligatorio</mat-error>
               } @else if (appointmentForm.get('email')?.errors?.['email']) {
                 <mat-error>Ingrese un email válido</mat-error>
@@ -140,8 +146,12 @@
               formControlName="phone"
               placeholder="+54 9 11 1234-5678"
             />
-            @if (appointmentForm.get('phone')?.invalid && appointmentForm.get('phone')?.touched) {
-              <mat-error>El teléfono es obligatorio</mat-error>
+            @if (shouldShowError('phone')) {
+              @if (hasBackendError('phone')) {
+                <mat-error>{{ getBackendError('phone') }}</mat-error>
+              } @else {
+                <mat-error>El teléfono es obligatorio</mat-error>
+              }
             }
           </mat-form-field>
         </div>
@@ -167,6 +177,11 @@
                   formControlName="make"
                   placeholder="Ej: Toyota, Ford, Volkswagen"
                 />
+                @if (shouldShowError('make')) {
+                  @if (hasBackendError('make')) {
+                    <mat-error>{{ getBackendError('make') }}</mat-error>
+                  }
+                }
               </mat-form-field>
 
               <mat-form-field class="half-width">
@@ -176,6 +191,11 @@
                   formControlName="model"
                   placeholder="Ej: Corolla, Focus, Gol"
                 />
+                @if (shouldShowError('model')) {
+                  @if (hasBackendError('model')) {
+                    <mat-error>{{ getBackendError('model') }}</mat-error>
+                  }
+                }
               </mat-form-field>
             </div>
 
@@ -190,6 +210,11 @@
                   [max]="currentYear + 1"
                   placeholder="2020"
                 />
+                @if (shouldShowError('year')) {
+                  @if (hasBackendError('year')) {
+                    <mat-error>{{ getBackendError('year') }}</mat-error>
+                  }
+                }
               </mat-form-field>
 
               <mat-form-field class="half-width">
@@ -199,6 +224,11 @@
                   formControlName="license_plate"
                   placeholder="ABC123 o AB123CD"
                 />
+                @if (shouldShowError('license_plate')) {
+                  @if (hasBackendError('license_plate')) {
+                    <mat-error>{{ getBackendError('license_plate') }}</mat-error>
+                  }
+                }
               </mat-form-field>
             </div>
           </div>

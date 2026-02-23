@@ -1,11 +1,13 @@
-import { Component, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
 import {
-  ReactiveFormsModule,
-  FormBuilder,
-  FormGroup,
-  Validators,
-} from "@angular/forms";
+  Component,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+  DestroyRef,
+} from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { CommonModule } from "@angular/common";
+import { ReactiveFormsModule, FormGroup } from "@angular/forms";
 import { Router, RouterModule } from "@angular/router";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
@@ -17,14 +19,24 @@ import { MatNativeDateModule } from "@angular/material/core";
 import { MatCardModule } from "@angular/material/card";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { combineLatest, map } from "rxjs";
+import { combineLatest, map, take } from "rxjs";
 import { HttpErrorResponse } from "@angular/common/http";
-import { AppointmentService } from "../../../services/appointment.service";
+
+import { AppointmentStateService } from "../../services/appointment-state.service";
+import { NotificationService } from "../../services/notification.service";
+import { FormErrorHandlerService } from "../../services/form-error-handler.service";
+
 import { CreateAppointmentRequest } from "../../../models/appointment.model";
+import { APP_CONSTANTS } from "../../constants/app.constants";
+import {
+  AppointmentFormService,
+  SERVICE_TYPES,
+} from "./appointment-form.service";
 
 @Component({
   selector: "app-appointment-form",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -43,68 +55,61 @@ import { CreateAppointmentRequest } from "../../../models/appointment.model";
   templateUrl: "./appointment-form.component.html",
   styleUrls: ["./appointment-form.component.scss"],
 })
-export class AppointmentFormComponent {
-  private readonly fb = inject(FormBuilder);
+export class AppointmentFormComponent implements OnInit {
   private readonly router = inject(Router);
-  readonly appointmentService = inject(AppointmentService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly appointmentService = inject(AppointmentStateService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly formErrorHandler = inject(FormErrorHandlerService);
+  private readonly formBuilder = inject(AppointmentFormService);
+
+  appointmentForm!: FormGroup;
+
+  isSubmitting = false;
+
+  readonly serviceTypes = SERVICE_TYPES;
+  readonly currentYear = APP_CONSTANTS.DATE.CURRENT_YEAR;
+  readonly spinnerDiameter = APP_CONSTANTS.UI.SPINNER_DIAMETER;
 
   readonly workshopState$ = combineLatest([
     this.appointmentService.workshops$,
     this.appointmentService.loading$,
-  ]).pipe(map(([workshops, loading]) => ({ workshops, loading })));
+  ]).pipe(
+    map(([workshops, loading]) => ({ workshops, loading })),
+    takeUntilDestroyed(this.destroyRef),
+  );
 
-  readonly currentYear = new Date().getFullYear();
-
-  appointmentForm!: FormGroup;
-  isSubmitting = false;
-
-  constructor() {
+  ngOnInit(): void {
     this.initializeForm();
+    this.setupFormSubscriptions();
   }
 
   private initializeForm(): void {
-    this.appointmentForm = this.fb.group({
-      place_id: [null, [Validators.required]],
-      appointmentDate: [null, [Validators.required]],
-      appointmentTime: ["", [Validators.required]],
-      service_type: ["", [Validators.required]],
-      name: ["", [Validators.required, Validators.minLength(2)]],
-      email: ["", [Validators.required, Validators.email]],
-      phone: ["", [Validators.required]],
-      hasVehicle: [false],
-      make: [""],
-      model: [""],
-      year: [null],
-      license_plate: [""],
-    });
-
-    this.setupDateTimeErrorClearing();
+    this.appointmentForm = this.formBuilder.createAppointmentForm();
   }
 
-  private setupDateTimeErrorClearing(): void {
-    const dateControl = this.appointmentForm.get("appointmentDate");
-    const timeControl = this.appointmentForm.get("appointmentTime");
+  private setupFormSubscriptions(): void {
+    this.appointmentForm
+      .get("hasVehicle")
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((hasVehicle) => {
+        this.formBuilder.updateVehicleValidations(
+          this.appointmentForm,
+          hasVehicle,
+        );
+      });
 
-    dateControl?.valueChanges.subscribe(() => {
-      this.clearBackendErrors(["appointmentDate", "appointmentTime"]);
-    });
-
-    timeControl?.valueChanges.subscribe(() => {
-      this.clearBackendErrors(["appointmentDate", "appointmentTime"]);
-    });
-  }
-
-  private clearBackendErrors(fieldNames: string[]): void {
-    fieldNames.forEach((fieldName) => {
-      const control = this.appointmentForm.get(fieldName);
-      const errors = control?.errors;
-
-      if (errors?.["backendError"]) {
-        const { backendError, ...otherErrors } = errors;
-        const hasOtherErrors = Object.keys(otherErrors).length > 0;
-
-        control?.setErrors(hasOtherErrors ? otherErrors : null);
-      }
+    const dateTimeControls = ["appointmentDate", "appointmentTime"];
+    dateTimeControls.forEach((controlName) => {
+      this.appointmentForm
+        .get(controlName)
+        ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          this.formErrorHandler.clearBackendErrors(
+            this.appointmentForm,
+            dateTimeControls,
+          );
+        });
     });
   }
 
@@ -112,86 +117,116 @@ export class AppointmentFormComponent {
     return this.appointmentForm?.get("hasVehicle")?.value || false;
   }
 
+  shouldShowError(fieldName: string): boolean {
+    const control = this.appointmentForm.get(fieldName);
+    return !!(control?.invalid && control?.touched);
+  }
+
+  hasBackendError(fieldName: string): boolean {
+    return this.formErrorHandler.hasBackendError(
+      this.appointmentForm,
+      fieldName,
+    );
+  }
+
+  getBackendError(fieldName: string): string {
+    return this.formErrorHandler.getBackendError(
+      this.appointmentForm,
+      fieldName,
+    );
+  }
+
   onSubmit(): void {
-    if (this.appointmentForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
+    if (!this.canSubmitForm()) {
+      this.markFormAsTouched();
+      return;
+    }
 
-      const formValue = this.appointmentForm.value;
+    this.isSubmitting = true;
+    const appointmentData = this.buildAppointmentData();
 
-      const appointmentData: CreateAppointmentRequest = {
-        place_id: formValue.place_id,
-        appointment_at: this.combineDateTime(),
-        service_type: formValue.service_type,
-        contact: {
-          name: formValue.name,
-          email: formValue.email,
-          phone: formValue.phone,
-        },
+    this.appointmentService
+      .createAppointment(appointmentData)
+      .pipe(take(1))
+      .subscribe({
+        next: () => this.handleSubmissionSuccess(),
+        error: (error: HttpErrorResponse) => this.handleSubmissionError(error),
+      });
+  }
+
+  private canSubmitForm(): boolean {
+    return (
+      this.formBuilder.isFormReadyForSubmission(this.appointmentForm) &&
+      !this.isSubmitting
+    );
+  }
+
+  private markFormAsTouched(): void {
+    Object.keys(this.appointmentForm.controls).forEach((key) => {
+      this.appointmentForm.get(key)?.markAsTouched();
+    });
+  }
+
+  private buildAppointmentData(): CreateAppointmentRequest {
+    const formData = this.formBuilder.getFormData(this.appointmentForm);
+
+    const appointmentData: CreateAppointmentRequest = {
+      place_id: formData.place_id!,
+      appointment_at: this.combineDateTime(
+        formData.appointmentDate!,
+        formData.appointmentTime,
+      ),
+      service_type: formData.service_type,
+      contact: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+      },
+    };
+
+    if (formData.hasVehicle && formData.make) {
+      appointmentData.vehicle = {
+        make: formData.make,
+        model: formData.model,
+        year: formData.year!,
+        licensePlate: formData.license_plate,
       };
-
-      if (this.hasVehicle() && formValue.make) {
-        appointmentData.vehicle = {
-          make: formValue.make,
-          model: formValue.model,
-          year: formValue.year,
-          licensePlate: formValue.license_plate,
-        };
-      }
-
-      this.appointmentService.createAppointment(appointmentData).subscribe({
-        next: (response) => {
-          this.router.navigate(["/appointments"]);
-          this.isSubmitting = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          this.handleFormErrors(error);
-          this.isSubmitting = false;
-        },
-      });
     }
+
+    return appointmentData;
   }
 
-  private handleFormErrors(error: HttpErrorResponse): void {
-    if (error.status === 400 && error.error?.errors) {
-      const errors = error.error.errors;
-
-      if (errors.AppointmentAt) {
-        this.appointmentForm.get("appointmentTime")?.setErrors({
-          backendError: errors.AppointmentAt[0],
-        });
-        this.appointmentForm.get("appointmentDate")?.setErrors({
-          backendError: errors.AppointmentAt[0],
-        });
-      }
-
-      if (errors.PlaceId) {
-        this.appointmentForm.get("place_id")?.setErrors({
-          backendError: errors.PlaceId[0],
-        });
-      }
-
-      if (errors.ServiceType) {
-        this.appointmentForm.get("service_type")?.setErrors({
-          backendError: errors.ServiceType[0],
-        });
-      }
-
-      Object.keys(this.appointmentForm.controls).forEach((key) => {
-        this.appointmentForm.get(key)?.markAsTouched();
-      });
-    }
-  }
-
-  private combineDateTime(): string {
-    const date = this.appointmentForm.get("appointmentDate")?.value;
-    const time = this.appointmentForm.get("appointmentTime")?.value;
-
+  private combineDateTime(date: Date, time: string): string {
     if (!date || !time) return "";
 
     const dateObj = new Date(date);
-    const [hours, minutes] = time.split(":");
-    dateObj.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    const [hours, minutes] = time.split(":").map(Number);
+    dateObj.setHours(hours, minutes, 0, 0);
 
     return dateObj.toISOString();
+  }
+
+  private handleSubmissionSuccess(): void {
+    this.router.navigate(["/appointments"]);
+    this.isSubmitting = false;
+  }
+
+  private handleSubmissionError(error: HttpErrorResponse): void {
+    const processedErrors = this.formErrorHandler.handleHttpFormErrors(
+      error,
+      this.appointmentForm,
+    );
+
+    if (processedErrors.length === 0) {
+      this.notificationService.error(
+        "Error al crear la cita. Por favor, intente nuevamente.",
+      );
+    }
+
+    this.isSubmitting = false;
+  }
+
+  resetForm(): void {
+    this.formBuilder.resetForm(this.appointmentForm);
   }
 }
