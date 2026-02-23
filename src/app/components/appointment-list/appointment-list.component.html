@@ -1,0 +1,93 @@
+<mat-card class="appointments-card">
+  <mat-card-header>
+    <mat-card-title>Lista de Turnos</mat-card-title>
+    <mat-card-subtitle>Gestiona los turnos de los talleres</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    @let state = appointmentState$ | async;
+    @if (state?.loading) {
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Cargando turnos...</p>
+      </div>
+    } @else if (state?.appointments?.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-state-icon">event_busy</mat-icon>
+        <h3>No hay turnos programados</h3>
+        <p>Comienza agregando un nuevo turno</p>
+        <a mat-raised-button color="primary" routerLink="/appointments/new">
+          <mat-icon class="icon-with-text">add</mat-icon>
+          Crear Primer Turno
+        </a>
+      </div>
+    } @else {
+      <mat-table
+        [dataSource]="state?.appointments || []"
+        class="appointments-table"
+      >
+        <!-- Columna de Fecha/Hora -->
+        <ng-container matColumnDef="datetime">
+          <mat-header-cell *matHeaderCellDef class="table-header-cell">Fecha y Hora</mat-header-cell>
+          <mat-cell *matCellDef="let appointment" class="table-data-cell">
+            {{ formatDateTime(appointment.appointmentAt) }}
+          </mat-cell>
+        </ng-container>
+
+        <!-- Columna de Taller -->
+        <ng-container matColumnDef="workshop">
+          <mat-header-cell *matHeaderCellDef class="table-header-cell">Taller</mat-header-cell>
+          <mat-cell *matCellDef="let appointment" class="table-data-cell">
+            {{ appointment.workshopName }}
+          </mat-cell>
+        </ng-container>
+
+        <!-- Columna de Servicio -->
+        <ng-container matColumnDef="serviceType">
+          <mat-header-cell *matHeaderCellDef class="table-header-cell">Tipo de Servicio</mat-header-cell>
+          <mat-cell *matCellDef="let appointment" class="table-data-cell">
+            {{ appointment.serviceType }}
+          </mat-cell>
+        </ng-container>
+
+        <!-- Columna de Cliente -->
+        <ng-container matColumnDef="client">
+          <mat-header-cell *matHeaderCellDef class="table-header-cell">Cliente</mat-header-cell>
+          <mat-cell *matCellDef="let appointment" class="table-data-cell">
+            <div class="client-info">
+              <strong>{{ appointment.contact.name }}</strong><br />
+              <small>{{ appointment.contact.email }}</small><br />
+              <small>{{ appointment.contact.phone }}</small>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <!-- Columna de Vehículo -->
+        <ng-container matColumnDef="vehicle">
+          <mat-header-cell *matHeaderCellDef class="table-header-cell">Vehículo</mat-header-cell>
+          <mat-cell *matCellDef="let appointment" class="table-data-cell">
+            @if (appointment.vehicle) {
+              <div class="vehicle-info">
+                <strong>{{ appointment.vehicle.make }} {{ appointment.vehicle.model }}</strong><br />
+                <small>Año: {{ appointment.vehicle.year }}</small><br />
+                <small>Patente: {{ appointment.vehicle.licensePlate || 'No especificada' }}</small>
+              </div>
+            } @else {
+              <span class="no-vehicle">Sin vehículo</span>
+            }
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+      </mat-table>
+    }
+  </mat-card-content>
+
+  <mat-card-actions align="end">
+    <a mat-raised-button color="primary" routerLink="/appointments/new">
+      <mat-icon class="icon-with-text">add</mat-icon>
+      Nuevo Turno
+    </a>
+  </mat-card-actions>
+</mat-card>

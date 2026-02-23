@@ -1,0 +1,57 @@
+// Componente de lista de turnos
+.appointments {
+  &-card {
+    margin: 16px;
+  }
+
+  &-table {
+    width: 100%;
+  }
+}
+
+// Estados de carga y vacío
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  gap: 16px;
+  text-align: center;
+
+  &-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #999;
+  }
+}
+
+// Celdas de tabla
+.table {
+  &-header-cell {
+    font-weight: 600;
+  }
+
+  &-data-cell {
+    padding: 8px;
+  }
+}
+
+// Información de clientes y vehículos
+.client-info,
+.vehicle-info {
+  line-height: 1.4;
+}
+
+.no-vehicle {
+  color: #999;
+  font-style: italic;
+}

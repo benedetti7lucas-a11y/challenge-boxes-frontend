@@ -1,0 +1,237 @@
+<mat-card class="appointment-form-card">
+  <mat-card-header>
+    <mat-card-title>Nuevo Turno</mat-card-title>
+    <mat-card-subtitle>Complete el formulario para reservar su turno</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()">
+      <!-- Información del Servicio -->
+      <div class="form-section">
+        <h3 class="section-title">Información del Servicio</h3>
+        
+        <div class="form-row">
+          <mat-form-field class="full-width">
+            <mat-label>Taller</mat-label>
+            <mat-select formControlName="place_id">
+              @let workshopState = workshopState$ | async;
+              @if (workshopState?.loading) {
+                <mat-option disabled>
+                  <mat-spinner diameter="20"></mat-spinner>
+                  Cargando talleres...
+                </mat-option>
+              } @else {
+                @for (workshop of workshopState?.workshops; track workshop.id) {
+                  <mat-option [value]="workshop.id">
+                    {{ workshop.name }} - {{ workshop.address }}
+                  </mat-option>
+                }
+              }
+            </mat-select>
+            @if (appointmentForm.get('place_id')?.invalid && appointmentForm.get('place_id')?.touched) {
+              @if (appointmentForm.get('place_id')?.errors?.['backendError']) {
+                <mat-error>{{ appointmentForm.get('place_id')?.errors?.['backendError'] }}</mat-error>
+              } @else {
+                <mat-error>Debe seleccionar un taller</mat-error>
+              }
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Fecha</mat-label>
+            <input
+              matInput
+              [matDatepicker]="picker"
+              formControlName="appointmentDate"
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            @if (appointmentForm.get('appointmentDate')?.invalid && appointmentForm.get('appointmentDate')?.touched) {
+              @if (appointmentForm.get('appointmentDate')?.errors?.['backendError']) {
+                <mat-error>{{ appointmentForm.get('appointmentDate')?.errors?.['backendError'] }}</mat-error>
+              } @else {
+                <mat-error>Debe seleccionar una fecha</mat-error>
+              }
+            }
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>Hora</mat-label>
+            <input
+              matInput
+              type="time"
+              formControlName="appointmentTime"
+            />
+            @if (appointmentForm.get('appointmentTime')?.invalid && appointmentForm.get('appointmentTime')?.touched) {
+              @if (appointmentForm.get('appointmentTime')?.errors?.['backendError']) {
+                <mat-error>{{ appointmentForm.get('appointmentTime')?.errors?.['backendError'] }}</mat-error>
+              } @else {
+                <mat-error>Debe seleccionar una hora</mat-error>
+              }
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="full-width">
+            <mat-label>Tipo de Servicio</mat-label>
+            <mat-select formControlName="service_type">
+              <mat-option value="Mantención General">Mantención General</mat-option>
+              <mat-option value="Cambio de Aceite">Cambio de Aceite</mat-option>
+              <mat-option value="Revisión de Frenos">Revisión de Frenos</mat-option>
+              <mat-option value="Alineación y Balanceo">Alineación y Balanceo</mat-option>
+              <mat-option value="Revisión Técnica">Revisión Técnica</mat-option>
+              <mat-option value="Reparación de Motor">Reparación de Motor</mat-option>
+              <mat-option value="Otros">Otros</mat-option>
+            </mat-select>
+            @if (appointmentForm.get('service_type')?.invalid && appointmentForm.get('service_type')?.touched) {
+              @if (appointmentForm.get('service_type')?.errors?.['backendError']) {
+                <mat-error>{{ appointmentForm.get('service_type')?.errors?.['backendError'] }}</mat-error>
+              } @else {
+                <mat-error>Debe seleccionar un tipo de servicio</mat-error>
+              }
+            }
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Información de Contacto -->
+      <div class="form-section">
+        <h3 class="section-title">Información de Contacto</h3>
+        
+        <div class="form-row">
+          <mat-form-field class="full-width">
+            <mat-label>Nombre Completo</mat-label>
+            <input
+              matInput
+              formControlName="name"
+              placeholder="Ingrese su nombre completo"
+            />
+            @if (appointmentForm.get('name')?.invalid && appointmentForm.get('name')?.touched) {
+              <mat-error>El nombre es obligatorio</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              type="email"
+              formControlName="email"
+              placeholder="ejemplo@correo.com"
+            />
+            @if (appointmentForm.get('email')?.invalid && appointmentForm.get('email')?.touched) {
+              @if (appointmentForm.get('email')?.errors?.['required']) {
+                <mat-error>El email es obligatorio</mat-error>
+              } @else if (appointmentForm.get('email')?.errors?.['email']) {
+                <mat-error>Ingrese un email válido</mat-error>
+              }
+            }
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>Teléfono</mat-label>
+            <input
+              matInput
+              formControlName="phone"
+              placeholder="+54 9 11 1234-5678"
+            />
+            @if (appointmentForm.get('phone')?.invalid && appointmentForm.get('phone')?.touched) {
+              <mat-error>El teléfono es obligatorio</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Información del Vehículo (Opcional) -->
+      <div class="form-section">
+        <h3 class="section-title">Información del Vehículo (Opcional)</h3>
+        
+        <div class="form-row">
+          <mat-checkbox formControlName="hasVehicle" color="primary">
+            Agregar información del vehículo
+          </mat-checkbox>
+        </div>
+
+        @if (hasVehicle()) {
+          <div class="vehicle-fields">
+            <div class="form-row">
+              <mat-form-field class="half-width">
+                <mat-label>Marca</mat-label>
+                <input
+                  matInput
+                  formControlName="make"
+                  placeholder="Ej: Toyota, Ford, Volkswagen"
+                />
+              </mat-form-field>
+
+              <mat-form-field class="half-width">
+                <mat-label>Modelo</mat-label>
+                <input
+                  matInput
+                  formControlName="model"
+                  placeholder="Ej: Corolla, Focus, Gol"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="half-width">
+                <mat-label>Año</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  formControlName="year"
+                  [min]="1900"
+                  [max]="currentYear + 1"
+                  placeholder="2020"
+                />
+              </mat-form-field>
+
+              <mat-form-field class="half-width">
+                <mat-label>Patente</mat-label>
+                <input
+                  matInput
+                  formControlName="license_plate"
+                  placeholder="ABC123 o AB123CD"
+                />
+              </mat-form-field>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          routerLink="/appointments"
+        >
+          Cancelar
+        </button>
+        
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="appointmentForm.invalid || isSubmitting"
+        >
+          @if (isSubmitting) {
+            <mat-spinner diameter="20"></mat-spinner>
+            Creando turno...
+          } @else {
+            <ng-container>
+              <mat-icon class="icon-with-text">save</mat-icon>
+              Crear Turno
+            </ng-container>
+          }
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

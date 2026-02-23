@@ -1,0 +1,63 @@
+// Componente de formulario de turnos
+.appointment {
+  &-form-card {
+    margin: 16px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+// Secciones del formulario
+.form {
+  &-section {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e0e0e0;
+
+    &:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      margin-bottom: 20px;
+      color: #5119d2;
+      font-weight: 500;
+    }
+  }
+
+  &-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+
+  &-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #e0e0e0;
+  }
+}
+
+// Anchos de campos
+.full-width {
+  width: 100%;
+}
+
+.half-width {
+  flex: 1;
+}
+
+// Campos de vehículo
+.vehicle-fields {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
