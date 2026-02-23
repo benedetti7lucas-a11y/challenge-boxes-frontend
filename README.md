@@ -7,6 +7,8 @@ Aplicación Angular para gestión de turnos de talleres mecánicos.
 **Frontend**: `http://localhost:4200`  
 **API**: `http://localhost:5000/api`
 
+**Link Github proyecto Api** https://github.com/benedetti7lucas-a11y/challenge-boxes-api.git
+
 ## Ejecutar
 
 ```bash
