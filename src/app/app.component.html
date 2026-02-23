@@ -1,0 +1,16 @@
+<mat-toolbar color="primary" class="app-toolbar">
+  <span>Tecnom Boxes - Reserva de Turnos</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/appointments" class="toolbar-link">
+    <mat-icon class="icon-with-text">list</mat-icon>
+    Ver Turnos
+  </a>
+  <a mat-button routerLink="/appointments/new" class="toolbar-link">
+    <mat-icon class="icon-with-text">add</mat-icon>
+    Nuevo Turno
+  </a>
+</mat-toolbar>
+
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>

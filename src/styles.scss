@@ -1,0 +1,103 @@
+/* You can add global styles to this file, and also import other style files */
+
+@use "@angular/material" as mat;
+
+@include mat.core();
+
+// Define el tema personalizado para Tecnom Boxes
+$primary: mat.m2-define-palette(mat.$m2-blue-palette, 600);
+$accent: mat.m2-define-palette(mat.$m2-orange-palette, 500);
+$warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+$theme: mat.m2-define-light-theme(
+  (
+    color: (
+      primary: $primary,
+      accent: $accent,
+      warn: $warn,
+    ),
+  )
+);
+
+@include mat.all-component-themes($theme);
+
+// Estilos globales
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #f5f5f5;
+  line-height: 1.5;
+}
+
+// Clases de utilidad
+.text-center {
+  text-align: center;
+}
+
+.mt-16 {
+  margin-top: 16px !important;
+}
+
+.mb-16 {
+  margin-bottom: 16px !important;
+}
+
+.p-16 {
+  padding: 16px !important;
+}
+
+// Personalización de SnackBar
+.success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+// Responsive utilities
+.mobile-hidden {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}
+
+.desktop-hidden {
+  @media (min-width: 769px) {
+    display: none !important;
+  }
+}
+
+// Material component customizations usando clases específicas
+.app {
+  &-toolbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+.appointment {
+  &-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+  }
+
+  &-stepper {
+    background: transparent !important;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}

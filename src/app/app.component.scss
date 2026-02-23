@@ -1,0 +1,24 @@
+// Layout principal
+.main-content {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+// Elementos de toolbar
+.toolbar {
+  &-link {
+    margin-left: 8px;
+  }
+}
+
+// Iconos
+.icon {
+  &-with-text {
+    margin-right: 4px;
+  }
+}
